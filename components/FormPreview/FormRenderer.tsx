@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFormBuilder } from '@/common/form/form';
 import { FieldConfig, FieldType } from '@/common/form/types';
 import type { Identifier, XYCoord } from 'dnd-core';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag, useDragLayer, useDrop } from 'react-dnd';
 
 import { DateInputField } from '../FormComponents/DateInputField';
 import { TextAreaField } from '../FormComponents/TextAreaField';
@@ -29,6 +29,12 @@ export const DraggableTypes = {
 };
 
 export function RenderField(props: RenderFieldProps) {
+  // Globally detect if field is being dragged
+  const { draggedId, isDraggingAny } = useDragLayer((monitor) => ({
+    draggedId: monitor.getItem()?.id,
+    isDraggingAny: monitor.isDragging()
+  }));
+
   const Component = useMemo(() => {
     switch (props.field.type) {
       case FieldType.TextInput:
@@ -104,22 +110,25 @@ export function RenderField(props: RenderFieldProps) {
     }
   });
 
-  const [{ isDragging }, drag] = useDrag({
+  const [, drag] = useDrag({
     type: DraggableTypes.FIELD,
     item: () => {
       return { id: props.field.id, index: props.index };
     },
-    collect: (monitor: any) => ({
+    collect: (monitor) => ({
       isDragging: monitor.isDragging()
     })
   });
 
-  const opacity = isDragging ? 30 : 100;
   drag(drop(ref));
+
+  // Use global monitor to customize original rendering
+  const isThisDragged = isDraggingAny && draggedId === props.field.id;
+  const opacity = isThisDragged ? 'opacity-30' : 'opacity-100';
 
   return (
     <div
-      className={`flex flex-col mb-5 opacity-${opacity}`}
+      className={`flex flex-col mb-5 ${opacity}`}
       ref={ref}
       data-handler-id={handlerId}
     >
