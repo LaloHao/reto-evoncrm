@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFormBuilder } from '@/common/form/form';
 import { FieldConfig, FieldType } from '@/common/form/types';
 import type { Identifier, XYCoord } from 'dnd-core';
@@ -7,6 +7,8 @@ import { useDrag, useDragLayer, useDrop } from 'react-dnd';
 import { DateInputField } from '../FormComponents/DateInputField';
 import { TextAreaField } from '../FormComponents/TextAreaField';
 import { TextInputField } from '../FormComponents/TextInputField';
+import { FieldEditor } from '../FormEditor/FieldEditor';
+import { Label } from '../ui/label';
 
 export interface FormRendererProps {
   formBuilder: ReturnType<typeof useFormBuilder>;
@@ -64,6 +66,9 @@ export function RenderField(props: RenderFieldProps) {
       if (!ref.current) {
         return;
       }
+      // hide edit form when dragging
+      props.formBuilder.editField(null);
+
       const dragIndex = item.index;
       const hoverIndex = props.index;
 
@@ -125,21 +130,42 @@ export function RenderField(props: RenderFieldProps) {
   // Use global monitor to customize original rendering
   const isThisDragged = isDraggingAny && draggedId === props.field.id;
   const opacity = isThisDragged ? 'opacity-30' : 'opacity-100';
+  const isEditing = props.formBuilder.editingFieldIndex === props.index;
+  const height = isEditing ? '' : '';
 
   return (
-    <div
-      className={`flex flex-col mb-5 ${opacity}`}
-      ref={ref}
-      data-handler-id={handlerId}
+    <FieldEditor
+      field={props.field}
+      onChange={(field) => props.formBuilder.updateField(field)}
+      isEditing={isEditing}
+      onEdit={() => {
+        if (isEditing) {
+          return props.formBuilder.editField(null);
+        }
+        return props.formBuilder.editField(props.index);
+      }}
+      onDelete={() => props.formBuilder.removeField(props.field)}
+      onBlur={() => props.formBuilder.editField(null)}
     >
-      <label
-        htmlFor={props.field.id}
-        className="mb-3 block text-base font-medium text-[#07074D]"
+      <div
+        className={`flex flex-col mb-5 ${opacity} ${height} transition-all`}
+        ref={ref}
+        data-handler-id={handlerId}
       >
-        {props.field.label}
-      </label>
-      {Component && <Component field={props.field} />}
-    </div>
+        <Label
+          htmlFor={props.field.id}
+          className="mb-3 block text-base font-medium text-[#07074D]"
+        >
+          {props.field.label}
+        </Label>
+        {Component && <Component field={props.field} />}
+        {props.field.helpText && (
+          <span className="text-sm text-gray-500 mt-1">
+            {props.field.helpText}
+          </span>
+        )}
+      </div>
+    </FieldEditor>
   );
 }
 
@@ -152,7 +178,9 @@ export function FormRenderer(props: FormRendererProps) {
 
   return (
     <div className="bg-white p-8 shadow-lg rounded-lg h-full overflow-y-auto">
-      <h1 className="text-2xl font-bold my-2">{currentStep.title}</h1>
+      <h1 className="text-2xl font-bold my-2">{formBuilder.form.title}</h1>
+      <span>{formBuilder.form.description}</span>
+      <h2 className="text-2xl font-bold my-4">{currentStep.title}</h2>
       <p>{currentStep.description}</p>
       {currentStep.fields.map((field, index) => (
         <RenderField

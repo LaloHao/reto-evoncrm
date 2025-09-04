@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { FieldConfig, FormConfig } from './types';
 import update from 'immutability-helper';
+import { useEffect, useRef } from 'react';
 
 export function createSimpleForm(): FormConfig {
   return {
@@ -23,9 +24,19 @@ export function useFormBuilder() {
   const [form, setForm] = useState<FormConfig>(createSimpleForm);
   const [currentStep, setCurrentStep] = useState(0);
   const [isDirty, setIsDirty] = useState(false);
+  const [isLoadingForm, setIsLoadingForm] = useState(true);
+  const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(null);
 
   // TODO: Auto-save every 2s if there are changes
-  // useAutoSave(form, isDirty)
+  useAutoSave(form, isDirty)
+
+  useEffect(() => {
+    const savedForm = localStorage.getItem('form-builder-draft');
+    if (savedForm) {
+      trySetForm(savedForm);
+    }
+    setIsLoadingForm(false);
+  }, []);
 
   const clearForm = useCallback(() => {
     setForm(createSimpleForm());
@@ -103,14 +114,87 @@ export function useFormBuilder() {
     }
   }, []);
 
+  const editField = useCallback((index: number | null) => {
+    setEditingFieldIndex(index);
+  }, [])
+
+  const updateField = useCallback((updatedField: FieldConfig) => {
+    setForm((prevForm) => {
+      const step = update(prevForm.steps[currentStep], {
+        fields: {
+          $apply: (fields: FieldConfig[]) =>
+            fields.map((field) =>
+              field.id === updatedField.id
+                ? {
+                    ...updatedField,
+                    name: kebabCase(updatedField.label),
+                  }
+                : field
+            ),
+        },
+      });
+      const steps = update(prevForm.steps, {
+        [currentStep]: { $set: step },
+      });
+      return {
+        ...prevForm,
+        steps,
+      };
+    });
+  }, [currentStep]);
+
   return {
     form,
     currentStep,
     isDirty,
+    isLoading: isLoadingForm,
     clearForm,
     addField,
     removeField,
     moveField,
     trySetForm,
+    updateField,
+    editField,
+    editingFieldIndex,
   };
+}
+
+const kebabCase = (str: string) => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+};
+
+function useAutoSave(form: FormConfig, isDirty: boolean) {
+  const throttledSave = useThrottledFunction((form: FormConfig) => {
+    localStorage.setItem('form-builder-draft', JSON.stringify(form));
+  }, 2000);
+
+  useEffect(() => {
+    // if (!isDirty) return;
+    throttledSave(form);
+  }, [form, isDirty]);
+}
+
+function useThrottledFunction(f: (...args: any[]) => void, delay: number) {
+  const lastRan = useRef(Date.now());
+  const timeout = useRef<NodeJS.Timeout | null>(null);
+
+  const throttled = useCallback((...args: any[]) => {
+    const now = Date.now();
+
+    if (now - lastRan.current >= delay) {
+      lastRan.current = now;
+      f(...args);
+    } else {
+      if (timeout.current) clearTimeout(timeout.current);
+      timeout.current = setTimeout(() => {
+        lastRan.current = Date.now();
+        f(...args);
+      }, delay - (now - lastRan.current));
+    }
+  }, [f, delay]);
+
+  return throttled;
 }

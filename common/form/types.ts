@@ -19,6 +19,13 @@ export interface FormStep {
   fields: FieldConfig[];
 }
 
+export enum FieldRegexType {
+  Phone = 'phone',
+  Email = 'email',
+  Curp = 'curp',
+  Custom = 'custom',
+}
+
 export interface FieldConfig {
   id: string
   type: FieldType
@@ -30,7 +37,7 @@ export interface FieldConfig {
   validations?: {
     minLength?: number
     maxLength?: number
-    regex?: 'phone' | 'email' | 'curp' | 'custom'
+    regex?: FieldRegexType
     customRegex?: string
   }
 }

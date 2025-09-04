@@ -25,7 +25,7 @@ export default function Page() {
                 showSource={() => showSource(true)}
               />
             </div>
-            <div className="flex flex-col flex-1 border-2 border-dashed border-gray-400 p-[10px] m-[10px]">
+            <div className="flex flex-col flex-1 m-[10px] mr-[15px]">
               <FormRenderer formBuilder={formBuilder} />
             </div>
           </div>

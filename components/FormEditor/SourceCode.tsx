@@ -1,5 +1,7 @@
-import { useFormBuilder } from '@/common/form/form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFormBuilder } from '@/common/form/form';
+
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 export interface SourceCodeProps {
   formBuilder: ReturnType<typeof useFormBuilder>;
@@ -32,18 +34,19 @@ export function SourceCode(props: SourceCodeProps) {
   const sourceCode = useMemo(() => {
     return JSON.stringify(props.formBuilder.form, null, 2);
   }, [props.formBuilder.form]);
-  
+
   useEffect(() => {
     if (!isEditing) {
       setCurrentValue(sourceCode);
     }
   }, [sourceCode, isEditing]);
 
+  const copyToClipboard = useCopyToClipboard();
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(sourceCode);
+    await copyToClipboard(sourceCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [sourceCode]);
+  }, [sourceCode, copyToClipboard]);
 
   const debouncedSetForm = useDebounce((newForm: string) => {
     props.formBuilder.trySetForm(newForm);
@@ -60,6 +63,7 @@ export function SourceCode(props: SourceCodeProps) {
     [debouncedSetForm]
   );
 
+  // TODO: use enhanced modal
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-gray-400/80"
