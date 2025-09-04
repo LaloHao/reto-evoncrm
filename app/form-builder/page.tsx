@@ -6,6 +6,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import { FieldList } from '@/components/FormEditor/FieldList';
+import { FormConfigEditor } from '@/components/FormEditor/FormConfigEditor';
 import { SourceCode } from '@/components/FormEditor/SourceCode';
 import { FormRenderer } from '@/components/FormPreview/FormRenderer';
 
@@ -19,7 +20,8 @@ export default function Page() {
       <div className="flex flex-col my-10 flex-1">
         <DndProvider backend={HTML5Backend}>
           <div className="flex flex-1 flex-row">
-            <div className="m-[10px]">
+            <div className="space-y-5 m-[10px]">
+              <FormConfigEditor formBuilder={formBuilder} />
               <FieldList
                 formBuilder={formBuilder}
                 showSource={() => showSource(true)}

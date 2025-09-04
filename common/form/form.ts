@@ -155,6 +155,7 @@ export function useFormBuilder() {
     trySetForm,
     updateField,
     editField,
+    setForm,
     editingFieldIndex,
   };
 }
