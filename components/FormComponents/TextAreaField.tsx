@@ -1,11 +1,9 @@
-import { FieldConfig } from '@/common/form/types';
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { RenderedFieldProps } from '@/common/form/types';
 
-export interface TextAreaFieldProps {
-  field: FieldConfig;
-}
+import { Textarea } from '../ui/textarea';
 
-export function TextAreaField(props: TextAreaFieldProps) {
+export function TextAreaField(props: RenderedFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize the textarea height based on content
@@ -24,13 +22,20 @@ export function TextAreaField(props: TextAreaFieldProps) {
   };
 
   return (
-    <textarea
+    <Textarea
       ref={textareaRef}
       id={props.field.id}
       name={props.field.name}
       placeholder={props.field.placeholder}
-      className="w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md resize-none"
+      value={props.value}
+      onChange={
+        props.onChange
+          ? (e) => props.onChange?.(props.field.name, e.target.value)
+          : undefined
+      }
       onInput={handleInput}
+      required={props.field.required}
+      className={props.hasError ? 'border-red-500' : ''}
     />
   );
 }

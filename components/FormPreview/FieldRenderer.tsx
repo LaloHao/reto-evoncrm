@@ -1,6 +1,10 @@
-import { useMemo, useRef } from 'react';
+import { JSX, useMemo, useRef } from 'react';
 import { useFormBuilder } from '@/common/form/form';
-import { FieldConfig, FieldType } from '@/common/form/types';
+import {
+  FieldConfig,
+  FieldType,
+  RenderedFieldProps
+} from '@/common/form/types';
 import type { Identifier } from 'dnd-core';
 import { useDrag, useDragLayer, useDrop, XYCoord } from 'react-dnd';
 
@@ -34,7 +38,9 @@ export function FieldRenderer(props: RenderFieldProps) {
     isDraggingAny: monitor.isDragging()
   }));
 
-  const Component = useMemo(() => {
+  const Component = useMemo<
+    ((props: RenderedFieldProps) => JSX.Element) | null
+  >(() => {
     switch (props.field.type) {
       case FieldType.TextInput:
         return TextInputField;
@@ -129,6 +135,9 @@ export function FieldRenderer(props: RenderFieldProps) {
   const opacity = isThisDragged ? 'opacity-30' : 'opacity-100';
   const isEditing = props.formBuilder.editingFieldIndex === props.index;
   const height = isEditing ? '' : '';
+  const hasError = !!props.formBuilder.fieldErrors[props.field.name];
+  const textColor = hasError ? 'text-red-500' : 'text-gray-500';
+  const borderColor = hasError ? 'border-red-500' : 'border-transparent';
 
   return (
     <FieldEditor
@@ -151,12 +160,24 @@ export function FieldRenderer(props: RenderFieldProps) {
       >
         <Label
           htmlFor={props.field.id}
-          className="mb-3 block text-base font-medium text-[#07074D]"
+          className={`mb-3 block text-base font-medium ${textColor}`}
         >
           {props.field.label}
         </Label>
-        {Component && <Component field={props.field} />}
-        {props.field.helpText && (
+        {Component && (
+          <Component
+            hasError={hasError}
+            field={props.field}
+            value={props.formBuilder.fieldValues[props.field.name] || ''}
+            onChange={props.formBuilder.onChange}
+          />
+        )}
+        {hasError && (
+          <span className="text-sm text-red-500 mt-1">
+            {props.formBuilder.fieldErrors[props.field.name]}
+          </span>
+        )}
+        {props.field.helpText && !hasError && (
           <span className="text-sm text-gray-500 mt-1">
             {props.field.helpText}
           </span>

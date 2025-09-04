@@ -1,21 +1,23 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { FieldConfig, FormConfig } from './types';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import update from 'immutability-helper';
-import { useEffect, useRef } from 'react';
+
+import { generateFormSchema } from '@/schemas/forms/generate-form-schema';
+
+import { FieldConfig, FormConfig } from './types';
 
 export function createSimpleForm(): FormConfig {
   return {
     steps: [
       {
         title: 'First step',
-        fields: [],
-      },
+        fields: []
+      }
     ],
     type: 'simple',
     title: 'Simple form',
-    description: 'A very simple form',
+    description: 'A very simple form'
   };
 }
 
@@ -25,11 +27,67 @@ export function useFormBuilder() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isDirty, setIsDirty] = useState(false);
   const [isLoadingForm, setIsLoadingForm] = useState(true);
-  const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(null);
+  const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(
+    null
+  );
 
   // TODO: Auto-save every 2s if there are changes
-  useAutoSave(form, isDirty)
+  useAutoSave(form, isDirty);
 
+  // State to hold field values
+  const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateFieldChanges = useCallback(
+    (fieldName: string, value: any) => {
+      const schema = generateFormSchema(form.steps[currentStep].fields);
+      const result = schema.safeParse({ [fieldName]: value });
+      if (result.success) {
+        setFieldErrors({}); // clear all errors
+        // console.log(`${fieldName} is valid`);
+      } else {
+        const error = result.error.errors.find(
+          (err) => err.path[0] === fieldName
+        );
+
+        // console.log(error);
+        if (!error) {
+          setFieldErrors((prev) => {
+            const { [fieldName]: _, ...rest } = prev;
+            return rest;
+          });
+        } else {
+          // debugger;
+          setFieldErrors((prev) => ({
+            ...prev,
+            [fieldName]: error!.message
+          }));
+          // console.log('Validation errors:', result.error.errors);
+        }
+      }
+    },
+    [form, currentStep, fieldValues, setFieldErrors]
+  );
+
+  // Generic onChange handler for fields
+  const onChange = useCallback(
+    (fieldName: string, value: any) => {
+      setFieldValues((prev) => ({
+        ...prev,
+        [fieldName]: value || ''
+      }));
+      setIsDirty(true);
+      // throttledValidation(fieldName);
+      validateFieldChanges(fieldName, value);
+    },
+    [setFieldValues, validateFieldChanges, setIsDirty]
+  );
+
+  // TODO: reconsider using a throttled function for validation
+  // to avoid excessive validations on fast typing
+  // const throttledValidation = useThrottledFunction(validateFieldChanges, 1000);
+
+  // Load form from localStorage on mount
   useEffect(() => {
     const savedForm = localStorage.getItem('form-builder-draft');
     if (savedForm) {
@@ -47,14 +105,14 @@ export function useFormBuilder() {
   const addField = useCallback(
     (field: FieldConfig) => {
       const step = update(form.steps[currentStep], {
-        fields: { $push: [field] },
+        fields: { $push: [field] }
       });
       const steps = update(form.steps, {
-        [currentStep]: { $set: step },
+        [currentStep]: { $set: step }
       });
       setForm({
         ...form,
-        steps,
+        steps
       });
     },
     [currentStep, form]
@@ -66,11 +124,11 @@ export function useFormBuilder() {
         (f) => f.id !== field.id
       );
       const steps = update(form.steps, {
-        [currentStep]: { fields: { $set: fields } },
+        [currentStep]: { fields: { $set: fields } }
       });
       setForm({
         ...form,
-        steps,
+        steps
       });
     },
     [currentStep, form]
@@ -84,8 +142,8 @@ export function useFormBuilder() {
         fields.splice(hoverIndex, 0, removed);
         return update(prevForm, {
           steps: {
-            [currentStep]: { fields: { $set: fields } },
-          },
+            [currentStep]: { fields: { $set: fields } }
+          }
         });
       });
     },
@@ -116,32 +174,35 @@ export function useFormBuilder() {
 
   const editField = useCallback((index: number | null) => {
     setEditingFieldIndex(index);
-  }, [])
+  }, []);
 
-  const updateField = useCallback((updatedField: FieldConfig) => {
-    setForm((prevForm) => {
-      const step = update(prevForm.steps[currentStep], {
-        fields: {
-          $apply: (fields: FieldConfig[]) =>
-            fields.map((field) =>
-              field.id === updatedField.id
-                ? {
-                    ...updatedField,
-                    name: kebabCase(updatedField.label),
-                  }
-                : field
-            ),
-        },
+  const updateField = useCallback(
+    (updatedField: FieldConfig) => {
+      setForm((prevForm) => {
+        const step = update(prevForm.steps[currentStep], {
+          fields: {
+            $apply: (fields: FieldConfig[]) =>
+              fields.map((field) =>
+                field.id === updatedField.id
+                  ? {
+                      ...updatedField,
+                      name: kebabCase(updatedField.label)
+                    }
+                  : field
+              )
+          }
+        });
+        const steps = update(prevForm.steps, {
+          [currentStep]: { $set: step }
+        });
+        return {
+          ...prevForm,
+          steps
+        };
       });
-      const steps = update(prevForm.steps, {
-        [currentStep]: { $set: step },
-      });
-      return {
-        ...prevForm,
-        steps,
-      };
-    });
-  }, [currentStep]);
+    },
+    [currentStep]
+  );
 
   return {
     form,
@@ -156,7 +217,10 @@ export function useFormBuilder() {
     updateField,
     editField,
     setForm,
-    editingFieldIndex,
+    fieldValues,
+    fieldErrors,
+    onChange,
+    editingFieldIndex
   };
 }
 
@@ -182,20 +246,26 @@ function useThrottledFunction(f: (...args: any[]) => void, delay: number) {
   const lastRan = useRef(Date.now());
   const timeout = useRef<NodeJS.Timeout | null>(null);
 
-  const throttled = useCallback((...args: any[]) => {
-    const now = Date.now();
+  const throttled = useCallback(
+    (...args: any[]) => {
+      const now = Date.now();
 
-    if (now - lastRan.current >= delay) {
-      lastRan.current = now;
-      f(...args);
-    } else {
-      if (timeout.current) clearTimeout(timeout.current);
-      timeout.current = setTimeout(() => {
-        lastRan.current = Date.now();
+      if (now - lastRan.current >= delay) {
+        lastRan.current = now;
         f(...args);
-      }, delay - (now - lastRan.current));
-    }
-  }, [f, delay]);
+      } else {
+        if (timeout.current) clearTimeout(timeout.current);
+        timeout.current = setTimeout(
+          () => {
+            lastRan.current = Date.now();
+            f(...args);
+          },
+          delay - (now - lastRan.current)
+        );
+      }
+    },
+    [f, delay]
+  );
 
   return throttled;
 }

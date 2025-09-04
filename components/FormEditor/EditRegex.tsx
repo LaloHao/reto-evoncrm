@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FieldRegexType } from '@/common/form/types';
 
 import { InputWithAdornments } from '../ui/input-with-adornments';
@@ -7,6 +8,8 @@ import { FieldEditorProps } from './FieldEditor';
 export interface EditRegexProps extends FieldEditorProps {}
 
 export function EditRegex(props: EditRegexProps) {
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <div className="flex flex-row mx-8 items-center space-x-4">
       <Label>Regex</Label>
@@ -36,30 +39,39 @@ export function EditRegex(props: EditRegexProps) {
         <option value={FieldRegexType.Curp}>CURP</option>
         <option value={FieldRegexType.Custom}>Custom</option>
       </select>
-      {/* TODO: validate custom regex */}
-      {props.field.validations?.regex === FieldRegexType.Custom && (
-        <InputWithAdornments
-          value={props.field.validations.customRegex || ''}
-          maxLength={255}
-          autoCapitalize="off"
-          type="text"
-          onChange={(e) => {
-            if (props.onChange) {
-              let validations = props.field.validations || {};
-              if (!e.target.value || e.target.value === '') {
-                const { customRegex, ...v } = validations;
-                validations = v;
-              } else {
-                validations.customRegex = e.target.value;
+      <div className="flex flex-col">
+        {props.field.validations?.regex === FieldRegexType.Custom && (
+          <InputWithAdornments
+            value={props.field.validations.customRegex || ''}
+            maxLength={255}
+            autoCapitalize="off"
+            type="text"
+            onChange={(e) => {
+              // validate regex pattern
+              try {
+                new RegExp(e.target.value);
+              } catch (e) {
+                setError(`Invalid regex pattern: ${e}`);
               }
-              props.onChange({
-                ...props.field,
-                validations
-              });
-            }
-          }}
-        />
-      )}
+
+              if (props.onChange) {
+                let validations = props.field.validations || {};
+                if (!e.target.value || e.target.value === '') {
+                  const { customRegex, ...v } = validations;
+                  validations = v;
+                } else {
+                  validations.customRegex = e.target.value;
+                }
+                props.onChange({
+                  ...props.field,
+                  validations
+                });
+              }
+            }}
+          />
+        )}
+      </div>
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 }

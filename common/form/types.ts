@@ -10,7 +10,7 @@ export interface FormConfig {
 export enum FieldType {
   TextInput = 'TextInput',
   DateInput = 'DateInput',
-  TextArea = 'TextArea',
+  TextArea = 'TextArea'
 }
 
 export interface FormStep {
@@ -23,26 +23,26 @@ export enum FieldRegexType {
   Phone = 'phone',
   Email = 'email',
   Curp = 'curp',
-  Custom = 'custom',
+  Custom = 'custom'
 }
 
 export interface FieldConfig {
-  id: string
-  type: FieldType
-  label: string
-  name: string // auto-generated kebab-case
-  placeholder?: string
-  helpText?: string
-  required: boolean
+  id: string;
+  type: FieldType;
+  label: string;
+  name: string; // auto-generated kebab-case
+  placeholder?: string;
+  helpText?: string;
+  required: boolean;
   validations?: {
-    minLength?: number
-    maxLength?: number
-    regex?: FieldRegexType
-    customRegex?: string
-  }
+    minLength?: number;
+    maxLength?: number;
+    regex?: FieldRegexType;
+    customRegex?: string;
+  };
 }
 
-const VALIDATION_PATTERNS = {
+export const VALIDATION_PATTERNS = {
   phone: {
     pattern: /^[0-9]{10}$/,
     message: 'Enter a valid phone number (10 digits)',
@@ -58,4 +58,11 @@ const VALIDATION_PATTERNS = {
     message: 'Enter a valid CURP',
     example: 'ABCD123456HDFRRR09'
   }
+};
+
+export interface RenderedFieldProps {
+  hasError?: boolean;
+  field: FieldConfig;
+  onChange?: (fieldId: string, value: string) => void;
+  value?: string;
 }
