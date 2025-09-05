@@ -78,8 +78,10 @@ export function FieldList(props: FieldListProps) {
     }
 
     const result = await createForm(formBuilder.form);
-    if (!result?.serverError && result?.validationErrors && result.data) {
-      console.log('Form created', result.data);
+    if (!result?.serverError && result?.validationErrors) {
+      toast.success(
+        'Form created and successfully! Navigate to /shared-forms to see it.'
+      );
     } else {
       console.log(
         'Error creating form',

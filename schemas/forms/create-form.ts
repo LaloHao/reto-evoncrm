@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const FieldTypeEnum = z.enum(["TextInput", "DateInput", "TextArea"]);
+export const FieldTypeEnum = z.enum(['TextInput', 'DateInput', 'TextArea']);
 
 export const FieldConfigSchema = z.object({
   id: z.string().uuid(),
@@ -14,23 +14,23 @@ export const FieldConfigSchema = z.object({
     .object({
       minLength: z.number().optional(),
       maxLength: z.number().optional(),
-      regex: z.enum(["phone", "email", "curp", "custom"]).optional(),
-      customRegex: z.string().optional(),
+      regex: z.enum(['phone', 'email', 'curp', 'custom']).optional(),
+      customRegex: z.string().optional()
     })
-    .optional(),
+    .optional()
 });
 
 export const FormStepSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
-  fields: z.array(FieldConfigSchema),
+  fields: z.array(FieldConfigSchema)
 });
 
 export const FormConfigSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
-  infoTop: z.string().optional(),
-  infoBottom: z.string().optional(),
-  type: z.enum(["simple", "multi-step"]),
-  steps: z.array(FormStepSchema),
+  infoTop: z.string().nullish(),
+  infoBottom: z.string().nullish(),
+  type: z.enum(['simple', 'multi-step']),
+  steps: z.array(FormStepSchema)
 });

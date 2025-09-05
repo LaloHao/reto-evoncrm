@@ -49,6 +49,7 @@ export function useFormBuilder(initialForm?: FormConfig) {
   const addStep = useCallback(() => {
     setForm((prevForm) => ({
       ...prevForm,
+      type: 'multi-step',
       steps: [
         ...prevForm.steps,
         { title: `Step ${prevForm.steps.length + 1}`, fields: [] }
@@ -64,6 +65,7 @@ export function useFormBuilder(initialForm?: FormConfig) {
         const steps = prevForm.steps.filter((_, i) => i !== index);
         return {
           ...prevForm,
+          type: steps.length === 1 ? 'simple' : 'multi-step',
           steps
         };
       });

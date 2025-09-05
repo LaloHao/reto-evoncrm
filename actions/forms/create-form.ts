@@ -23,6 +23,7 @@ export const createForm = authActionClient
     });
     const sharedLink = await prisma.publicFormShare.create({
       data: {
+        title: createdForm.title,
         formId: createdForm.id,
         organizationId: ctx.session.user.organizationId,
         form: JSON.stringify(createdForm),

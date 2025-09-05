@@ -18,6 +18,7 @@ export async function getSharedForm(
     if (typeof dbForm.form === 'string') {
       const parsed = JSON.parse(dbForm.form);
       const steps = JSON.parse(parsed.steps);
+      parsed.type = parsed.type === 'SIMPLE' ? 'simple' : 'multi-step';
       parsed.steps = steps;
       if (
         typeof parsed !== 'object' ||
@@ -37,13 +38,5 @@ export async function getSharedForm(
     console.error('Failed to parse form JSON:', error);
   }
 
-  // const form: FormConfig = {
-  //   title: dbForm.title,
-  //   description: dbForm.description || undefined,
-  //   infoTop: dbForm.infoTop || undefined,
-  //   infoBottom: dbForm.infoBottom || undefined,
-  //   type: dbForm.type === 'SIMPLE' ? 'simple' : 'multi-step',
-  //   steps: typeof dbForm?.steps === 'string' ? JSON.parse(dbForm.steps) : []
-  // };
   return undefined;
 }
