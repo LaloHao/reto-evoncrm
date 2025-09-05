@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { getForm } from '@/actions/forms/get-form';
+import { getSharedForm } from '@/actions/forms/get-shared-form';
 import { FormFiller } from '@/components/FormPreview/FormFiller';
 
 export default async function FormPage({
@@ -9,7 +9,7 @@ export default async function FormPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const form = await getForm(id);
+  const form = await getSharedForm(id);
   if (!form) {
     return notFound();
   }

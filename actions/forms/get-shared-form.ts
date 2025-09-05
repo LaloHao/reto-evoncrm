@@ -4,7 +4,9 @@ import { FormConfig } from '@/common/form/types';
 
 import { prisma } from '@/lib/db/prisma';
 
-export async function getForm(id: string): Promise<FormConfig | undefined> {
+export async function getSharedForm(
+  id: string
+): Promise<FormConfig | undefined> {
   const dbForm = await prisma.publicFormShare.findFirst({
     where: { id }
   });
