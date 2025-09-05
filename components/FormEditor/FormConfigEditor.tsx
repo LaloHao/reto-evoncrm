@@ -71,6 +71,22 @@ export function FormConfigEditor(props: FormConfigEditorProps) {
           }
         />
       </div>
+      <div className="flex space-x-2">
+        <button
+          type="button"
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+          onClick={props.formBuilder.addStep}
+        >
+          Add step
+        </button>
+        <button
+          type="button"
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+          onClick={props.formBuilder.removeCurrentStep}
+        >
+          Remove step
+        </button>
+      </div>
     </div>
   );
 }

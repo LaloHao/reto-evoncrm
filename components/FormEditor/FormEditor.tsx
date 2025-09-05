@@ -10,6 +10,8 @@ import { FormConfigEditor } from '@/components/FormEditor/FormConfigEditor';
 import { SourceCode } from '@/components/FormEditor/SourceCode';
 import { FormRenderer } from '@/components/FormPreview/FormRenderer';
 
+import { StepManager } from './StepManager';
+
 export interface FormEditorProps {}
 
 export function FormEditor(props: FormEditorProps) {
@@ -30,7 +32,9 @@ export function FormEditor(props: FormEditorProps) {
               />
             </div>
             <div className="flex flex-col flex-1 m-[10px] mr-[15px]">
-              <FormRenderer formBuilder={formBuilder} />
+              <StepManager formBuilder={formBuilder}>
+                <FormRenderer formBuilder={formBuilder} />
+              </StepManager>
             </div>
           </div>
         </DndProvider>

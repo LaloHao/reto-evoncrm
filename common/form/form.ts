@@ -38,6 +38,44 @@ export function useFormBuilder(initialForm?: FormConfig) {
   // auto-save form values every 2 seconds if there are changes
   useAutoSaveValues(initialForm?.id, fieldValues, isDirty);
 
+  const nextStep = useCallback(() => {
+    setCurrentStep((prev) => Math.min(prev + 1, form.steps.length - 1));
+  }, [form]);
+
+  const prevStep = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  }, []);
+
+  const addStep = useCallback(() => {
+    setForm((prevForm) => ({
+      ...prevForm,
+      steps: [
+        ...prevForm.steps,
+        { title: `Step ${prevForm.steps.length + 1}`, fields: [] }
+      ]
+    }));
+    setCurrentStep(form.steps.length); // move to the new step
+  }, [form]);
+
+  const removeStep = useCallback(
+    (index: number) => {
+      if (form.steps.length === 1) return; // always keep at least one step
+      setForm((prevForm) => {
+        const steps = prevForm.steps.filter((_, i) => i !== index);
+        return {
+          ...prevForm,
+          steps
+        };
+      });
+      setCurrentStep((prev) => Math.max(0, prev - 1));
+    },
+    [form]
+  );
+
+  const removeCurrentStep = useCallback(() => {
+    removeStep(currentStep);
+  }, [currentStep, removeStep]);
+
   // State to hold field values
   const validateFieldChanges = useCallback(
     (fieldName: string, value: any) => {
@@ -243,7 +281,12 @@ export function useFormBuilder(initialForm?: FormConfig) {
     fieldValues,
     fieldErrors,
     onChange,
-    editingFieldIndex
+    editingFieldIndex,
+    nextStep,
+    prevStep,
+    addStep,
+    removeStep,
+    removeCurrentStep
   };
 }
 
