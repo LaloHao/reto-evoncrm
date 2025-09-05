@@ -90,16 +90,56 @@ export function FieldEditor(props: FieldEditorProps) {
             </div>
             {props.field.validations && (
               <>
-                <EditNumberField
-                  fieldKey="validations.minLength"
-                  label="Min Length"
-                  {...props}
-                />
-                <EditNumberField
-                  fieldKey="validations.maxLength"
-                  label="Max Length"
-                  {...props}
-                />
+                <div className="flex items-center mx-8 mt-4 space-x-2">
+                  <input
+                    name="minLength"
+                    type="checkbox"
+                    checked={!!props.field.validations.minLength}
+                    onChange={(e) => {
+                      if (props.onChange) {
+                        props.onChange({
+                          ...props.field,
+                          validations: {
+                            ...props.field.validations,
+                            minLength: e.target.checked ? 1 : undefined
+                          }
+                        });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="minLength">Min Length</Label>
+                  {props.field.validations.minLength && (
+                    <EditNumberField
+                      fieldKey="validations.minLength"
+                      {...props}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center mx-8 space-x-2">
+                  <input
+                    name="maxLength"
+                    type="checkbox"
+                    checked={!!props.field.validations.maxLength}
+                    onChange={(e) => {
+                      if (props.onChange) {
+                        props.onChange({
+                          ...props.field,
+                          validations: {
+                            ...props.field.validations,
+                            maxLength: e.target.checked ? 255 : undefined
+                          }
+                        });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="maxLength">Max Length</Label>
+                  {props.field.validations.maxLength && (
+                    <EditNumberField
+                      fieldKey="validations.maxLength"
+                      {...props}
+                    />
+                  )}
+                </div>
                 <EditRegex {...props} />
               </>
             )}

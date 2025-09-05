@@ -22,7 +22,6 @@ enum ActorType {
   API    @map("api")
 }
 
-
 enum DayOfWeek {
   SUNDAY    @map("sunday")
   MONDAY    @map("monday")
@@ -118,10 +117,6 @@ model ChangeEmailRequest {
   @@index([userId], map: "IX_ChangeEmailRequest_userId")
 }
 
-
-
-
-
 model Feedback {
   id             String           @id(map: "PK_Feedback") @default(uuid()) @db.Uuid
   organizationId String           @db.Uuid
@@ -169,27 +164,29 @@ model Notification {
 }
 
 model Organization {
-  id                  String       @id(map: "PK_Organization") @default(uuid()) @db.Uuid
+  id                  String            @id(map: "PK_Organization") @default(uuid()) @db.Uuid
   stripeCustomerId    String
-  name                String       @db.VarChar(255)
-  address             String?      @db.VarChar(255)
-  phone               String?      @db.VarChar(32)
-  email               String?      @db.VarChar(255)
-  website             String?      @db.VarChar(2000)
-  linkedInProfile     String?      @db.VarChar(2000)
-  instagramProfile    String?      @db.VarChar(2000)
-  youTubeChannel      String?      @db.VarChar(2000)
-  xProfile            String?      @db.VarChar(2000)
-  tikTokProfile       String?      @db.VarChar(2000)
-  facebookPage        String?      @db.VarChar(2000)
-  completedOnboarding Boolean      @default(false)
-  tier                String       @default("free") @db.VarChar(255)
+  name                String            @db.VarChar(255)
+  address             String?           @db.VarChar(255)
+  phone               String?           @db.VarChar(32)
+  email               String?           @db.VarChar(255)
+  website             String?           @db.VarChar(2000)
+  linkedInProfile     String?           @db.VarChar(2000)
+  instagramProfile    String?           @db.VarChar(2000)
+  youTubeChannel      String?           @db.VarChar(2000)
+  xProfile            String?           @db.VarChar(2000)
+  tikTokProfile       String?           @db.VarChar(2000)
+  facebookPage        String?           @db.VarChar(2000)
+  completedOnboarding Boolean           @default(false)
+  tier                String            @default("free") @db.VarChar(255)
   apiKeys             ApiKey[]
   businessHours       WorkHours[]
   feedback            Feedback[]
   invitations         Invitation[]
   users               User[]
   webhooks            Webhook[]
+  forms               Form[]
+  publicForms         PublicFormShare[]
 
   @@index([stripeCustomerId], map: "IX_Organization_stripeCustomerId")
 }
@@ -296,4 +293,58 @@ model WorkTimeSlot {
   workHours   WorkHours @relation(fields: [workHoursId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([workHoursId], map: "IX_WorkTimeSlot_workHoursId")
+}
+
+enum FormType {
+  SIMPLE
+  MULTI_STEP
+}
+
+model Form {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  title       String
+  description String?
+  infoTop     String?
+  infoBottom  String?
+  type        FormType
+  steps       Json
+
+  createdAt DateTime @default(now())
+  createdBy String   @db.Uuid
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String   @db.Uuid
+
+  @@index([organizationId], map: "IX_Form_organizationId")
+  @@index([createdBy], map: "IX_Form_createdBy")
+  @@index([updatedBy], map: "IX_Form_updatedBy")
+}
+
+enum FieldType {
+  TEXT_INPUT
+  DATE_INPUT
+  TEXT_AREA
+}
+
+// forms can be shared as a snapshot but once shared they cannot be modified, you can either delete it or create a new one
+model PublicFormShare {
+  id             String       @id @default(uuid())
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  formId      String  @db.Uuid
+  title       String  @default("Untitled Form")
+  description String?
+  form        Json // snapshot of the form at the time of sharing
+
+  createdAt DateTime @default(now())
+  createdBy String   @db.Uuid
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String   @db.Uuid
+
+  expiresAt DateTime? // Optional: for expiring links
+
+  @@index([formId], map: "IX_PublicFormShare_formId")
 }

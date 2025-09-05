@@ -22,22 +22,23 @@ export function createSimpleForm(): FormConfig {
 }
 
 // Main hook
-export function useFormBuilder() {
-  const [form, setForm] = useState<FormConfig>(createSimpleForm);
+export function useFormBuilder(initialForm?: FormConfig) {
+  const [form, setForm] = useState<FormConfig>(initialForm || createSimpleForm);
   const [currentStep, setCurrentStep] = useState(0);
   const [isDirty, setIsDirty] = useState(false);
   const [isLoadingForm, setIsLoadingForm] = useState(true);
   const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(
     null
   );
-
-  // TODO: Auto-save every 2s if there are changes
-  useAutoSave(form, isDirty);
-
-  // State to hold field values
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // auto-save form every 2 seconds if there are changes
+  useAutoSaveForm(form, !initialForm);
+  // auto-save form values every 2 seconds if there are changes
+  useAutoSaveValues(initialForm?.id, fieldValues, isDirty);
+
+  // State to hold field values
   const validateFieldChanges = useCallback(
     (fieldName: string, value: any) => {
       const schema = generateFormSchema(form.steps[currentStep].fields);
@@ -89,6 +90,11 @@ export function useFormBuilder() {
 
   // Load form from localStorage on mount
   useEffect(() => {
+    // don't load anything from local storage if we already have an initial form
+    if (initialForm) {
+      setIsLoadingForm(false);
+      return;
+    }
     const savedForm = localStorage.getItem('form-builder-draft');
     if (savedForm) {
       trySetForm(savedForm);
@@ -96,8 +102,25 @@ export function useFormBuilder() {
     setIsLoadingForm(false);
   }, []);
 
+  // Load form values from localStorage on mount
+  useEffect(() => {
+    if (!initialForm) return;
+    const savedValues = localStorage.getItem(`form-${initialForm.id}`);
+    if (savedValues) {
+      try {
+        const parsed = JSON.parse(savedValues);
+        if (typeof parsed === 'object' && parsed !== null) {
+          setFieldValues(parsed);
+        }
+      } catch (e) {
+        console.error('Invalid saved form values', e);
+      }
+    }
+  }, [initialForm]);
+
   const clearForm = useCallback(() => {
     setForm(createSimpleForm());
+    localStorage.removeItem('form-builder-draft');
     setCurrentStep(0);
     setIsDirty(false);
   }, []);
@@ -231,15 +254,33 @@ const kebabCase = (str: string) => {
     .replace(/(^-|-$)/g, '');
 };
 
-function useAutoSave(form: FormConfig, isDirty: boolean) {
+function useAutoSaveForm(form: FormConfig, enabled: boolean) {
   const throttledSave = useThrottledFunction((form: FormConfig) => {
     localStorage.setItem('form-builder-draft', JSON.stringify(form));
   }, 2000);
 
   useEffect(() => {
-    // if (!isDirty) return;
+    if (!enabled) return;
     throttledSave(form);
-  }, [form, isDirty]);
+  }, [form, enabled]);
+}
+
+function useAutoSaveValues(
+  formId: string | undefined,
+  formValues: Record<string, any>,
+  isDirty: boolean
+) {
+  const throttledSave = useThrottledFunction(
+    (formValues: Record<string, any>) => {
+      localStorage.setItem(`form-${formId}`, JSON.stringify(formValues));
+    },
+    2000
+  );
+
+  useEffect(() => {
+    if (!formId) return;
+    throttledSave(formValues);
+  }, [formValues, isDirty, formId]);
 }
 
 function useThrottledFunction(f: (...args: any[]) => void, delay: number) {

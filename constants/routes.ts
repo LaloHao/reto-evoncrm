@@ -36,6 +36,8 @@ export enum Routes {
 
   Dashboard = '/dashboard',
   Home = '/dashboard/home',
+  Forms = '/dashboard/forms',
+  SharedForms = '/dashboard/shared-forms',
   Settings = '/dashboard/settings',
   Account = '/dashboard/settings/account',
   Profile = '/dashboard/settings/account/profile',

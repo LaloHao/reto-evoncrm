@@ -1,7 +1,16 @@
+import { useCallback } from 'react';
+import { redirect } from 'next/navigation';
 import { useFormBuilder } from '@/common/form/form';
 import { FieldType } from '@/common/form/types';
-import { useCallback } from 'react';
+import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+
+import { createForm } from '@/actions/forms/create-form';
+import { Routes } from '@/constants/routes';
+import { dedupedAuth } from '@/lib/auth';
+import { getSessionServer } from '@/lib/auth/get-session';
+import { checkSession, getSessionExpiryFromNow } from '@/lib/auth/session';
+
 import { Icon } from './Icon';
 
 export interface FieldListProps {
@@ -19,7 +28,7 @@ export function FieldList(props: FieldListProps) {
       type: FieldType.TextInput,
       label: 'Text Input',
       name: `text-input-${id}`,
-      required: false,
+      required: false
     });
   }, [formBuilder]);
 
@@ -30,7 +39,7 @@ export function FieldList(props: FieldListProps) {
       type: FieldType.DateInput,
       label: 'Date Field',
       name: `date-input-${id}`,
-      required: false,
+      required: false
     });
   }, [formBuilder]);
 
@@ -41,7 +50,7 @@ export function FieldList(props: FieldListProps) {
       type: FieldType.TextArea,
       label: 'Text Area',
       name: `text-area-${id}`,
-      required: false,
+      required: false
     });
   }, [formBuilder]);
 
@@ -59,14 +68,36 @@ export function FieldList(props: FieldListProps) {
     // { label: "Radio Group", icon: "radio" },
     // { label: "Select", icon: "select" },
     { label: 'Text Field', icon: 'text', onClick: addTextInput },
-    { label: 'Text Area', icon: 'textarea', onClick: addTextArea },
+    { label: 'Text Area', icon: 'textarea', onClick: addTextArea }
   ];
+
+  const onShare = useCallback(async () => {
+    const session = await getSessionServer();
+    if (!checkSession(session)) {
+      return redirect(Routes.Home);
+    }
+
+    const result = await createForm(formBuilder.form);
+    if (!result?.serverError && result?.validationErrors && result.data) {
+      console.log('Form created', result.data);
+    } else {
+      console.log(
+        'Error creating form',
+        result?.serverError,
+        result?.validationErrors
+      );
+      toast.error("Couldn't create form");
+    }
+  }, [formBuilder.form]);
 
   return (
     <div className="w-64 bg-white/95 backdrop-blur rounded-xl shadow-2xl ring-1 ring-black/5 overflow-hidden">
       <ul className="divide-y divide-gray-100">
         {items.map((it, i) => (
-          <li key={i} className="group">
+          <li
+            key={i}
+            className="group"
+          >
             <button
               type="button"
               className="w-full flex items-center gap-3 px-3 py-2 text-left select-none transition
@@ -97,7 +128,10 @@ export function FieldList(props: FieldListProps) {
         >
           {'[{…}]'}
         </button>
-        <button className="px-3 py-1.5 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition">
+        <button
+          onClick={onShare}
+          className="px-3 py-1.5 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+        >
           Share
         </button>
       </div>

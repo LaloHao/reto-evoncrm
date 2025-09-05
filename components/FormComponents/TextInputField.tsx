@@ -1,3 +1,5 @@
+'use client';
+
 import { RenderedFieldProps } from '@/common/form/types';
 
 import { InputWithAdornments } from '@/components/ui/input-with-adornments';

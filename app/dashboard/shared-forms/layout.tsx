@@ -11,7 +11,7 @@ import {
 import { createTitle } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: createTitle('Form Builder')
+  title: createTitle('Shared forms')
 };
 
 export default function HomeLayout(
@@ -21,7 +21,7 @@ export default function HomeLayout(
     <Page>
       <PageHeader>
         <PagePrimaryBar>
-          <PageTitle>Form Builder</PageTitle>
+          <PageTitle>Shared Forms</PageTitle>
         </PagePrimaryBar>
       </PageHeader>
       <PageBody>

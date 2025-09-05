@@ -1,4 +1,5 @@
 export interface FormConfig {
+  id?: string;
   title: string;
   description?: string;
   infoTop?: string;
