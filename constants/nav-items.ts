@@ -21,6 +21,16 @@ export const mainNavItems: NavItem[] = [
     icon: HomeIcon
   },
   {
+    title: 'Forms',
+    href: Routes.Forms,
+    icon: CodeIcon
+  },
+  {
+    title: 'Shared Forms',
+    href: Routes.SharedForms,
+    icon: UsersIcon
+  },
+  {
     title: 'Settings',
     href: Routes.Settings,
     icon: SettingsIcon
