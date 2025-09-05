@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useFormBuilder } from '@/common/form/form';
 import { FormConfig } from '@/common/form/types';
+import { toast } from 'sonner';
 
 import { Button } from '../ui/button';
 import { FieldFiller } from './FieldFiller';
@@ -26,6 +27,7 @@ export function FormFiller(props: FormFillerProps) {
 
   const onSubmit = useCallback(() => {
     console.log('Form submitted with values:', formBuilder.fieldValues);
+    toast.success('Form submitted successfully!');
   }, [formBuilder.fieldValues]);
 
   return (
